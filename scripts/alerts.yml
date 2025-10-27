@@ -1,0 +1,14 @@
+name: Alerts
+on:
+  workflow_run:
+    workflows: ["Pull On-Chain State","Generate Media","Publish to X","Publish YouTube Short"]
+    types: [completed]
+jobs:
+  alert:
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl "https://api.telegram.org/bot${{ secrets.TG_TOKEN }}/sendMessage" \
+          --data chat_id="${{ secrets.TG_CHAT }}" \
+          --data text="⚠️ NextOne: job fallito ${{ github.workflow }} @ ${{ github.run_id }}"
