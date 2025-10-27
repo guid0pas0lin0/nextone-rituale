@@ -1,11 +1,22 @@
 import json, re
+from langdetect import detect
+from profanity_check import predict_prob
+
 raw = json.load(open("data/confessions_raw.json"))
 clean = json.load(open("data/confessions.json"))
+rejected = []
+
 for item in raw:
-    t = item.get("text","")[:280]
-    if re.search(r'(https?://|@|#|\+39|\d{9,})', t): continue
-    if len(t.strip())<5: continue
-    clean.append({"id": item.get("id", len(clean)+1), "text": t})
+    text = item["text"][:280]
+    if predict_prob([text])[0] > 0.7: 
+        rejected.append({"id": item["id"], "reason": "profanity"})
+        continue
+    if re.search(r'\b(\+39|@[A-Za-z0-9_]+|https?://)\b', text):
+        rejected.append({"id": item["id"], "reason": "pii/url"})
+        continue
+    item["text"] = text
+    item["lang"] = detect(text)
+    clean.append(item)
+
 json.dump(clean, open("data/confessions.json","w"), ensure_ascii=False, indent=2)
 open("data/confessions_raw.json","w").write("[]")
-print("Moderazione OK:", len(clean))
