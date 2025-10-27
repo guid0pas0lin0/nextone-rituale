@@ -1,0 +1,14 @@
+name: Moderate Confessions
+on:
+  workflow_dispatch:
+  schedule: [{ cron: "*/30 * * * *" }]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -V
+      - run: python scripts/moderator.py
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "moderation: update confessions"
